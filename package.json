@@ -10,8 +10,11 @@
   "author": "mynes",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^12.12.3",
     "generate-password": "^1.4.2",
     "js-yaml": "^3.13.1",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "node-worker-threads-pool": "^1.1.0",
+    "pool-worker-threads": "^1.0.0"
   }
 }

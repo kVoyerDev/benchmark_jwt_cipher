@@ -3,11 +3,10 @@
 const { generateKeyPair }    = require('crypto');
 const fs                     = require('fs');
 const yaml                   = require('js-yaml');
-
 const { benchmarkChecking } = require("./benchmark-cheking");
 const { 
     getRandomSecret, 
-    createWorker 
+    createWorker
 } = require("./utils");
 
 try {
@@ -75,22 +74,38 @@ const createDBS = async (benchmarks, index) => {
     const { thread_db_building } = config;
     for (let i = 0; i < thread_db_building; i++) {
         const workerOptions = {
+            task:function() {
+                const { getRandomSecret } = require("./utils");
+                const jwt = require("jsonwebtoken");
+                const { tokensToBuild, benchsAlgos, algorithm } = this.workerData;
+                const tokens = [];
+                while (tokens.length !== tokensToBuild) {
+                    const payload = { data:getRandomSecret(64) };
+                    const { private_key } = benchsAlgos.get(algorithm);
+                    const tokenOptions = { expiresIn: '1h', algorithm };
+                    const token = jwt.sign(payload, private_key, tokenOptions);
+                    tokens.push(token);
+                }
+                return { tokens };
+            },
             workerData : {
                 tokensToBuild:bench.tokens/thread_db_building,
                 benchsAlgos,
                 algorithm:bench.algorithm
             }
         };
-        const workerPromise = createWorker("./build-db.worker.js", workerOptions);
+        const workerPromise = createWorker(workerOptions);
         workers.push(workerPromise);
-        workerPromise.catch(err => {
-            console.error(err);
-        });
     }
-
     const resWorkers = await Promise.all(workers);
-    for (let resWorker of resWorkers)
-        tokens = tokens.concat(resWorker.tokens);
+    tokens = resWorkers
+        .map(rw => rw.tokens)
+        .reduce((prev, acc) => {
+            if (prev === undefined)
+                debugger
+            return prev.concat(acc)
+        });
+
     dbTokens.set(bench.algorithm, tokens);
     const duration = Date.now() - start;
     console.log(`Data for bench ${bench.algorithm} builded (${duration}ms)`);
@@ -114,13 +129,30 @@ const runTests = async (index, bench) => {
         const partLength = parseInt(tokens.length/test.thread_number, 10);
         const dataWorker = tokens.slice(0, partLength);
         const workerOptions = {
+            task:function() {
+                const jwt = require("jsonwebtoken");
+                const { tokens, key } = this.workerData;
+                const invalidTokenList = tokens.filter(token => {
+                    try {
+                        jwt.verify(token, key);
+                        return false;
+                    }catch(e) {
+                        return true;
+                    }
+                });
+
+                return ({
+                    tokenInvalid:invalidTokenList.length,
+                    tokenChecked:tokens.length
+                });
+            },
             workerData: {
                 key: public_key ? public_key : private_key,
                 tokens:dataWorker,
                 passphrase: passphrase
             }
         };
-        workers.push(createWorker("./benchmark-processing.worker.js", workerOptions));
+        workers.push(createWorker(workerOptions));
     }
     const workersReturns = await Promise.all(workers);
     const duration = Date.now() - before;

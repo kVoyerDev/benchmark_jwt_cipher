@@ -1,23 +1,16 @@
 'use strict'
 
-const { Worker } = require("worker_threads");
 const generator  = require("generate-password");
-
-const createWorker = (service, options) => 
-    new Promise((resolve, reject) => {
-        const beforeProcessing = Date.now();
-        const worker = new Worker(service, options);
-        worker.on("message", data => {
-            resolve({
-                processingDuration: Date.now() - beforeProcessing,
-                ...data
-            });
-        });
-        worker.on("error", reject);
-        worker.on("exit", code => {
-            reject(new Error(`Worker stopped with code error ${code}`));
-        });
-    });
+const { WorkerPool } = require("pool-worker-threads");
+const pool = new WorkerPool(4, true);
+const createWorker = async (options) => {
+    const start = Date.now();
+    const res = await pool.exec(options).toPromise();
+    return { 
+        processingDuration:Date.now() - start,
+        ...res
+    };
+}
 
 /**
  * @param {number} length 
@@ -30,5 +23,6 @@ const getRandomSecret = length => generator.generate({
 
 module.exports = {
     createWorker,
-    getRandomSecret
+    getRandomSecret,
+    pool
 };

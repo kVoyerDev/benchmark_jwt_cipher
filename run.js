@@ -3,6 +3,7 @@
 const fs  = require("fs");
 const os  = require("os");
 const { run } = require("./benchmark");
+const { pool } = require("./utils");
 
 if (!fs.existsSync("./results"))
     fs.mkdir("./results", err => {
@@ -13,6 +14,7 @@ if (!fs.existsSync("./results"))
 
 run()
     .then(benchStates => {
+        pool.destroy();
         const data = {
             host: {
                 cpus:os.cpus()[0].model

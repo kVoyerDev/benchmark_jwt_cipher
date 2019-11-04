@@ -11,7 +11,7 @@ benchmarks:
         thread_number: 3
       - active: true
         thread_number: 4
-    tokens: 1000
+    tokens: 100000
   - algorithm: HS384
     tests:
       - active: true
@@ -22,7 +22,7 @@ benchmarks:
         thread_number: 3
       - active: true
         thread_number: 4
-    tokens: 1000
+    tokens: 100000
   - algorithm: HS512
     tests:
       - active: true
@@ -33,7 +33,7 @@ benchmarks:
         thread_number: 3
       - active: true
         thread_number: 4
-    tokens: 1000
+    tokens: 100000
   - algorithm: RS256
     tests:
       - active: true
@@ -44,7 +44,7 @@ benchmarks:
         thread_number: 3
       - active: true
         thread_number: 4
-    tokens: 1000
+    tokens: 100000
   - algorithm: RS384
     tests:
       - active: true
@@ -55,7 +55,7 @@ benchmarks:
         thread_number: 3
       - active: true
         thread_number: 4
-    tokens: 1000
+    tokens: 100000
   - algorithm: RS512
     tests:
       - active: true
@@ -66,4 +66,4 @@ benchmarks:
         thread_number: 3
       - active: true
         thread_number: 4
-    tokens: 1000
+    tokens: 100000
